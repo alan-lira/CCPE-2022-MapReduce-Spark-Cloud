@@ -23,6 +23,8 @@ Remarks: - The mentioned experiments were executed on Amazon's Cloud (AWS EC2) w
 
 	* 𝑛 ∈ {2, 4, 8, 16, 32, 64} SARS-CoV-2 input sequences;
 
+	* Ubuntu Server 22.04 LTS 64-bit (x86) operating system for all VM instances;
+
 	* z1d.6xlarge VM instance type for the Master node; and
 
 	* 𝑆𝑚𝑜 = {r5.large, r5.xlarge, r5.2xlarge, r5.4xlarge, r5.8xlarge, r5.12xlarge, r6i.large, r6i.xlarge, r6i.2xlarge, r6i.4xlarge, r6i.8xlarge, r6i.12xlarge,

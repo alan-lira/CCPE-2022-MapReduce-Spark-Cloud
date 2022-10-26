@@ -20,6 +20,8 @@ Remarks: - The mentioned experiments were executed on Amazon's Cloud (AWS EC2) w
 
 	* 𝑛 = 64 SARS-CoV-2 input sequences;
 
+	* Ubuntu Server 22.04 LTS 64-bit (x86) operating system for all VM instances;
+
 	* z1d.6xlarge VM instance type for the Master node; and
 
 	* z1d.large, z1d.xlarge, or z1d.2xlarge VM instances types for the Worker nodes.
