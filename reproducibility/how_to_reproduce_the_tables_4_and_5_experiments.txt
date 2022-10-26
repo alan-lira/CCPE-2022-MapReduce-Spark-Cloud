@@ -1,0 +1,109 @@
+------------------------------------
+HOW TO REPRODUCE THE 'TABLES 4 AND 5' EXPERIMENTS (Subsection 7.1: Analysis of Runtime and Monetary Cost Optimizations Using Optimal Parameters)
+
+___
+Assumptions: - You must be able to start Spark Standalone clusters with the outputted configurations from the target experimental scenarios (refer to 'tutorials/how_to_setup_and_start_a_spark_standalone_cluster_using_ubuntu.txt' file);
+
+	     - The CRESPark (v0.2.2) repository is cloned and trained on the local node (refer to 'reproducibility/how_to_reproduce_the_runtime_cost_model_training_and_testing_experiments.txt' file);
+
+             - All nodes (Master and Workers) cloned the Diff Sequences Spark application (v0.9.9) repository (refer to 'tutorials/how_to_execute_the_diff_sequences_spark_application_on_a_spark_standalone_cluster_using_ubuntu.txt' file);
+
+             - All nodes' username is 'ubuntu';
+
+             - All nodes' CLI's starting path is '/home/ubuntu'; and
+
+             - The Master node cloned the SARS-CoV-2 input sequences directory (refer to 'tutorials/how_to_execute_the_diff_sequences_spark_application_on_a_spark_standalone_cluster_using_ubuntu.txt' file).
+
+___
+Tip: The input sequences files path sometimes may lead to runtime error due to the absolute path reference expected by the application. If that is your issue, try moving the input sequences directory into the 'diff-sequences-spark/' directory to make your life easier.
+
+___
+Remarks: - The mentioned experiments were executed on Amazon's Cloud (AWS EC2) with different input sequences size and different amounts and types of nodes (refer to paper's Subsection 7.1):
+
+	* 𝑛 ∈ {2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96} SARS-CoV-2 input sequences;
+
+	* z1d.6xlarge VM instance type for the Master node; and
+
+	* {r5.large, r5.xlarge, r5.2xlarge, r5.4xlarge, r5.8xlarge, r5.12xlarge, r6i.large, r6i.xlarge, r6i.2xlarge, r6i.4xlarge, r6i.8xlarge, r6i.12xlarge, z1d.large, z1d.xlarge, z1d.2xlarge, z1d.3xlarge, z1d.6xlarge, z1d.12xlarge} VM instances types for the Worker nodes.
+
+___
+1) To reproduce (obtain) the random parameters selection, i.e., Ec_rnd and iota_w, execute the following Python code on the local node:
+
+	from math import ceil
+	from random import randrange
+
+	Ec_min = 2    # Minimum number of Executors cores for a given experimental scenario
+	Ec_max = 20   # Maximum number of Executors cores for a given experimental scenario
+	gamma_w = 2   # Cores per Worker node for a given experimental scenario
+
+	Ec_rnd = randrange(Ec_min, Ec_max, gamma_w)
+
+	iota_w = ceil(Ec_rnd / gamma_w)
+
+	print("Ec_rnd = {0} | iota_w = {1}".format(Ec_rnd, iota_w))
+
+___
+2) To reproduce (obtain) the optimal parameters selection, i.e., Ec_opt and iota_w, execute CRESPark on the local node (the beta parameters must be known at this point, otherwise refer to 'reproducibility/how_to_reproduce_the_runtime_cost_model_training_and_testing_experiments.txt' file):
+
+	python3 crespark/optimize.py
+
+	Note: configure the 'Input Parameters', 'Decision Variables Bounds', and 'General Settings' on 'crespark/config/crespark_optimizer.cfg' file on the local node according to the target experimental scenario:
+
+	(vim crespark/config/crespark_optimizer.cfg)
+
+___
+3) Launch the Spark Standalone clusters with the outputted configurations above for the target experimental scenarios (refer to 'tutorials/how_to_setup_and_start_a_spark_standalone_cluster_using_ubuntu.txt' file).
+
+___
+4) Configure the following parameters of 'diff-sequences-spark/config/differentiator.cfg' file on the Master node:
+
+	(vim diff-sequences-spark/config/differentiator.cfg)
+
+	sequences_list_text_file = ../input_sequences/sars-cov-2_south_america_{X1}_sequences_list.txt
+	{X1} = 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, or 96
+
+	number_of_producers = 12
+
+	products_queue_max_size = 300
+
+	number_of_consumers = 12
+
+	fixed_k = {X2}
+	{X2} = Total number of Executors cores in the cluster = 2, 4, 6, 8, 12, 16, 20, 24, 28, 32, 36, 48, 56, 60, 64, 72, 80, 84, 96, 112, 120, 144, 160, 192, 216, 224, 256, 288, 336, 384, 432, or 480
+
+	(Please do not change the remaining parameters. They do not apply to the specific needs of these experiments.)
+
+___
+5) Configure the following parameters of 'diff-sequences-spark/config/spark_application_submission_settings.conf' file on the Master node:
+
+	(vim diff-sequences-spark/config/spark_application_submission_settings.conf)
+
+	spark.scheduler.allocation.file = config/spark_scheduler_allocation_settings.xml
+
+	spark.executor.cores = {X1}
+	{X1} = Number of vCPUs per Worker node = 2, 4, 8, 12, 16, 24, 32, or 48
+
+	spark.executor.memory = {X2}G
+	{X2} = Memory size in Gibibytes (GiB) per Worker node = 16, 32, 64, 96, 128, 192, 256, or 384
+
+	spark.driver.cores = 24
+
+	spark.driver.memory = 100G
+
+	(Please do not change the remaining parameters. They do not apply to the specific needs of these experiments.)
+
+___
+6) Submit the Diff Sequences Spark application to the Spark Cluster from the Master node:
+
+	$SPARK_HOME/bin/spark-submit --master spark://{MASTER_IP}:{MASTER_PORT} {APPLICATION_SUBMISSION_SETTINGS_FILE} {APPLICATION_ENTRY_POINT} {APPLICATION_ARGUMENTS}
+
+	where (Example): {MASTER_IP} = 10.0.2.1
+		         {MASTER_PORT} = 7077
+	                 {APPLICATION_SUBMISSION_SETTINGS_FILE} = diff-sequences-spark/config/spark_application_submission_settings.conf
+	                 {APPLICATION_ENTRY_POINT} = diff-sequences-spark/diff.py
+	                 {APPLICATION_ARGUMENTS} = diff-sequences-spark/config/differentiator.cfg
+
+___
+7) Navigate through the logging files generated at the 'diff-sequences-spark/logging/' directory on the Master node to obtain the execution details, e.g., runtime.
+------------------------------------
+

@@ -1,0 +1,50 @@
+------------------------------------
+HOW TO EXECUTE THE DIFF SEQUENCES SPARK APPLICATION (V0.9.9) ON A SPARK STANDALONE CLUSTER USING UBUNTU
+
+___
+Assumptions: - The Spark cluster is running (refer to 'tutorials/how_to_setup_and_start_spark_standalone_cluster_on_ubuntu.txt' file);
+
+             - All nodes (Master and Workers) are accessible via CLI (terminal);
+
+             - Their username is 'ubuntu'; and
+
+             - Their CLI's current path is '/home/ubuntu'.
+
+___
+1) Clone the Diff Sequences Spark application repository (v0.9.9) into all nodes (Master and Workers):
+
+	git clone https://github.com/alan-lira/diff-sequences-spark -b v0.9.9
+
+___
+2) Clone the SARS-CoV-2 input sequences directory into the Master node:
+
+	(considering git --version == 2.38.1)
+
+	mkdir ./temp; git clone --depth 1 --filter=blob:none --sparse https://github.com/alan-lira/ccpe-2022-mapreduce-spark-cloud ./temp; cd ./temp; git sparse-checkout set input_sequences; mv input_sequences ../input_sequences; cd ../; rm -rf ./temp
+
+	(or simply clone the entire repository into the Master node)
+
+	git clone https://github.com/alan-lira/ccpe-2022-mapreduce-spark-cloud; mv ./ccpe-2022-mapreduce-spark-cloud/input_sequences ./input_sequences; rm -rf ccpe-2022-mapreduce-spark-cloud
+
+___
+3) Configure the Diff Sequences Spark application parameters, i.e., input settings, output settings, general settings, producer-consumer threads settings, and partitioning settings, on the Master node (may vary from experiment to experiment):
+
+	vim diff-sequences-spark/config/differentiator.cfg
+
+___
+4) Configure the Diff Sequences Spark application submission settings, i.e., deploy mode, scheduler mode and allocation file, cluster maximum size (cores), cores per executor, memory per executor, driver cores and driver memory, on the Master node (may vary from experiment to experiment):
+
+	vim diff-sequences-spark/config/spark_application_submission_settings.conf
+
+___
+5) Submit the Diff Sequences Spark application to the Spark Cluster from the Master node:
+
+	$SPARK_HOME/bin/spark-submit --master spark://{MASTER_IP}:{MASTER_PORT} {APPLICATION_SUBMISSION_SETTINGS_FILE} {APPLICATION_ENTRY_POINT} {APPLICATION_ARGUMENTS}
+
+	where (Example): {MASTER_IP} = 10.0.2.1
+		         {MASTER_PORT} = 7077
+	                 {APPLICATION_SUBMISSION_SETTINGS_FILE} = diff-sequences-spark/config/spark_application_submission_settings.conf
+	                 {APPLICATION_ENTRY_POINT} = diff-sequences-spark/diff.py
+	                 {APPLICATION_ARGUMENTS} = diff-sequences-spark/config/differentiator.cfg
+------------------------------------
+

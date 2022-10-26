@@ -1,0 +1,76 @@
+------------------------------------
+HOW TO REPRODUCE THE 'REPLACEMENT OF DATAFRAMES FOR RDDS' EXPERIMENTS (Section 1: Introduction, 7th paragraph)
+
+___
+Assumptions: - You must be able to start a Spark Standalone cluster with the target experimental scenario configuration (refer to 'tutorials/how_to_setup_and_start_a_spark_standalone_cluster_using_ubuntu.txt' file);
+
+             - The Master node cloned the Diff Sequences Spark application (v0.9.9) repository (refer to 'tutorials/how_to_execute_the_diff_sequences_spark_application_on_a_spark_standalone_cluster_using_ubuntu.txt' file);
+
+             - The Master node's username is 'ubuntu';
+
+             - The Master node CLI's starting path is '/home/ubuntu'; and
+
+             - The Master node cloned the SARS-CoV-2 input sequences directory (refer to 'tutorials/how_to_execute_the_diff_sequences_spark_application_on_a_spark_standalone_cluster_using_ubuntu.txt' file).
+
+___
+Tip: The input sequences files path sometimes may lead to runtime error due to the absolute path reference expected by the application. If that is your issue, try moving the input sequences directory into the 'diff-sequences-spark/' directory to make your life easier.
+
+___
+1) The mentioned experiments were executed locally within a single node comprising 4 Cores and 8 GiB RAM. Execute the following instructions on the Master node to obtain an equivalent environment:
+
+	$SPARK_HOME/sbin/stop-all.sh
+
+	$SPARK_HOME/sbin/start-master.sh -h localhost -p 7077
+
+	$SPARK_HOME/sbin/start-worker.sh spark://localhost:7077 -c 4 -m 8G
+
+___
+2) Configure the following parameters of 'diff-sequences-spark/config/differentiator.cfg' file on the Master node:
+
+	(vim diff-sequences-spark/config/differentiator.cfg)
+
+	sequences_list_text_file = ../input_sequences/sars-cov-2_south_america_16_sequences_list.txt
+
+	allow_producer_consumer_threads = No
+
+	allow_simultaneous_jobs_run = No
+
+	data_structure = {X1}
+	{X1} = DataFrame (when using DataFrames) or RDD (when using RDDs)
+
+	(Please do not change the remaining parameters. They do not apply to the specific needs of these experiments.)
+
+___
+3) Configure the following parameters of 'diff-sequences-spark/config/spark_application_submission_settings.conf' file on the Master node:
+
+	(vim diff-sequences-spark/config/spark_application_submission_settings.conf)
+
+	spark.scheduler.mode = FIFO
+
+	spark.scheduler.allocation.file = config/spark_scheduler_allocation_settings.xml
+
+	spark.executor.cores = 4
+
+	spark.executor.memory = 8G
+
+	spark.driver.cores = 1
+
+	spark.driver.memory = 1G
+
+	(Please do not change the remaining parameters. They do not apply to the specific needs of these experiments.)
+
+___
+4) Submit the Diff Sequences Spark application to the Spark Cluster from the Master node:
+
+	$SPARK_HOME/bin/spark-submit --master spark://{MASTER_IP}:{MASTER_PORT} {APPLICATION_SUBMISSION_SETTINGS_FILE} {APPLICATION_ENTRY_POINT} {APPLICATION_ARGUMENTS}
+
+	where (Example): {MASTER_IP} = 10.0.2.1
+		         {MASTER_PORT} = 7077
+	                 {APPLICATION_SUBMISSION_SETTINGS_FILE} = diff-sequences-spark/config/spark_application_submission_settings.conf
+	                 {APPLICATION_ENTRY_POINT} = diff-sequences-spark/diff.py
+	                 {APPLICATION_ARGUMENTS} = diff-sequences-spark/config/differentiator.cfg
+
+___
+5) Navigate through the logging files generated at the 'diff-sequences-spark/logging/' directory on the Master node to obtain the execution details, e.g., runtime and average time per sequence comparison.
+------------------------------------
+

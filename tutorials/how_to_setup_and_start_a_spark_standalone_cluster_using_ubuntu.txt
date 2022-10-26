@@ -1,0 +1,101 @@
+------------------------------------
+HOW TO SETUP AND START A SPARK STANDALONE CLUSTER USING UBUNTU
+
+___
+Assumptions: - All nodes (Master and Workers) are accessible via CLI (terminal);
+
+             - Their username is 'ubuntu'; and
+
+             - Their CLI's current path is '/home/ubuntu'.
+
+___
+1) All nodes (Master and Workers) must update their 'hosts' file (etc/hosts) to include all the Cluster nodes' IPs and Aliases:
+
+	Example: 10.0.2.1 Master
+	         10.0.2.2 Worker1
+	         10.0.2.3 Worker2
+
+___
+2) All nodes (Master and Workers) must update their 'Available Packages List' and install 'OpenSSH' 'Scala', and 'Java':
+
+	sudo apt-get update
+
+	sudo apt-get install openssh-server openssh-client
+
+	sudo apt-get install scala -y
+
+	sudo apt-get install openjdk-11-jdk -y
+
+___
+3) The Master node must install 'Git':
+
+	(latest stable version for its Ubuntu release)
+
+	sudo apt-get install git
+
+	(or latest stable upstream Git version using PPA)
+
+	sudo add-apt-repository ppa:git-core/ppa; sudo apt update; sudo apt install git
+
+___
+4) The Master node must set its 'Public and Private RSA Key Pair':
+
+	ssh-keygen -q -t rsa -N '' -f ~/.ssh/id_rsa <<<y 2>&1 >/dev/null
+
+___
+5) The Worker nodes must authorize (include) the Master's Public RSA Key on their 'authorized_keys' file (.ssh/authorized_keys):
+
+	(Master) echo .ssh/id_rsa.pub > master_public_rsa_key
+
+	(Workers) echo '" + master_public_rsa_key + "' | sudo tee -a .ssh/authorized_keys"
+
+___
+6) The Master node must download and extract Apache Spark (v3.2.1):
+
+	wget https://archive.apache.org/dist/spark/spark-3.2.1/spark-3.2.1-bin-hadoop3.2.tgz
+
+	tar xvf spark-3.2.1-bin-hadoop3.2.tgz
+
+___
+7) The Master node must set the 'workers' file (/home/ubuntu/spark-3.2.1-bin-hadoop3.2/conf/workers) with all Worker nodes' IP or Aliases:
+
+	Example: Worker1
+		 Worker2
+
+___
+8) The Master node must set and load the 'bashrc' file (.bashrc) with Spark environment variables path:
+
+	export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+	export SPARK_HOME=/home/ubuntu/spark-3.2.1-bin-hadoop3.2
+	export PATH=$PATH:$SPARK_HOME/bin
+
+	source ~/.bashrc
+
+___
+9) The Worker nodes must download and extract Apache Spark (v3.2.1):
+
+	wget https://archive.apache.org/dist/spark/spark-3.2.1/spark-3.2.1-bin-hadoop3.2.tgz
+
+	tar xvf spark-3.2.1-bin-hadoop3.2.tgz
+
+___
+10) The Master node must authorize (include) all Worker nodes' Public SSH Key on its 'known_hosts' file (.ssh/known_hosts):
+
+	(Workers) echo ssh-keyscan -H " + worker_public_ip_address + " | grep 'ecdsa-sha2' > worker_public_ssh_host_key
+
+	(Master) echo '" + worker_public_ssh_host_key + "' | sudo tee -a .ssh/known_hosts
+
+___
+11) The Spark cluster should be ready to start on the Master node:
+
+	$SPARK_HOME/sbin/start-all.sh
+
+___
+12) Check the Spark cluster status via browser (WEB UI) locally:
+
+	http://{MASTER_IP}:{MASTER_WEB_PORT}
+
+	where (Example): {MASTER_IP} = 10.0.2.1
+		         {MASTER_WEB_PORT} = 8080
+------------------------------------
+

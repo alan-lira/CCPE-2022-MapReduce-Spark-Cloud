@@ -1,0 +1,147 @@
+------------------------------------
+HOW TO REPRODUCE THE 'TABLE 6' EXPERIMENTS (Subsection 7.2: Analysis of Spot Workers Simulated Revocation Scenarios)
+
+___
+Assumptions: - You must be able to start Spark Standalone clusters with the outputted configurations from the target experimental scenarios (refer to 'tutorials/how_to_setup_and_start_a_spark_standalone_cluster_using_ubuntu.txt' file);
+
+	     - The CRESPark (v0.2.2) repository is cloned and trained on the local node (refer to 'reproducibility/how_to_reproduce_the_runtime_cost_model_training_and_testing_experiments.txt' file);
+
+	     - The VM Revoker (v0.1.0) repository is cloned on the local node:
+			git clone https://github.com/alan-lira/vm-revoker -b v0.1.0
+
+             - All nodes (Master and Workers) cloned the Diff Sequences Spark application (v0.9.9) repository (refer to 'tutorials/how_to_execute_the_diff_sequences_spark_application_on_a_spark_standalone_cluster_using_ubuntu.txt' file);
+
+             - All nodes' username is 'ubuntu';
+
+             - All nodes' CLI's starting path is '/home/ubuntu'; and
+
+             - The Master node cloned the SARS-CoV-2 input sequences directory (refer to 'tutorials/how_to_execute_the_diff_sequences_spark_application_on_a_spark_standalone_cluster_using_ubuntu.txt' file).
+
+___
+Tip: The input sequences files path sometimes may lead to runtime error due to the absolute path reference expected by the application. If that is your issue, try moving the input sequences directory into the 'diff-sequences-spark/' directory to make your life easier.
+
+___
+Remarks: - The mentioned experiments were executed on Amazon's Cloud (AWS EC2) with different input sequences size and different amounts and types of nodes (refer to paper's Subsection 7.2):
+
+	* 𝑛 ∈ {64, 128, 256, 384} SARS-CoV-2 input sequences;
+
+	* z1d.6xlarge VM instance type for the Master node; and
+
+	* z1d.xlarge VM instances type for the Worker nodes.
+
+	- The mentioned experiments simulated the spot instances revocation scenarios using three different lambda rates (average revocation events in seconds):
+
+	* 𝜆 𝑅𝑆_1 = 1∕3600;
+
+	* 𝜆 𝑅𝑆_2 = 1∕1800; and
+
+	* 𝜆 𝑅𝑆_3 = 1∕900.
+
+___
+1) To reproduce (obtain) the optimal parameters selection, i.e., Ec_opt and iota_w, execute CRESPark on the local node (the beta parameters must be known at this point, otherwise refer to 'reproducibility/how_to_reproduce_the_runtime_cost_model_training_and_testing_experiments.txt' file):
+
+	python3 crespark/optimize.py
+
+	Note: configure the 'Input Parameters', 'Decision Variables Bounds', and 'General Settings' settings of 'crespark/config/crespark_optimizer.cfg' file on the local node according to the target experimental scenario:
+
+	(vim crespark/config/crespark_optimizer.cfg)
+
+___
+2) Launch the Spark Standalone clusters with the outputted configurations above for the target experimental scenarios (refer to 'tutorials/how_to_setup_and_start_a_spark_standalone_cluster_using_ubuntu.txt' file).
+
+___
+3) Configure the following parameters of 'diff-sequences-spark/config/differentiator.cfg' file on the Master node:
+
+	(vim diff-sequences-spark/config/differentiator.cfg)
+
+	sequences_list_text_file = ../input_sequences/sars-cov-2_south_america_{X1}_sequences_list.txt
+	{X1} = 64, 128, 256, or 384
+
+	number_of_producers = 12
+
+	products_queue_max_size = 300
+
+	number_of_consumers = 12
+
+	fixed_k = {X2}
+	{X2} = Total (initial) number of Executors cores in the cluster = 32
+
+	(Please do not change the remaining parameters. They do not apply to the specific needs of these experiments.)
+
+___
+4) Configure the following parameters of 'diff-sequences-spark/config/spark_application_submission_settings.conf' file on the Master node:
+
+	(vim diff-sequences-spark/config/spark_application_submission_settings.conf)
+
+	spark.scheduler.allocation.file = config/spark_scheduler_allocation_settings.xml
+
+	spark.executor.cores = {X1}
+	{X1} = Number of vCPUs per Worker node = 4
+
+	spark.executor.memory = {X2}G
+	{X2} = Memory size in Gibibytes (GiB) per Worker node = 32
+
+	spark.driver.cores = 24
+
+	spark.driver.memory = 100G
+
+	(Please do not change the remaining parameters. They do not apply to the specific needs of these experiments.)
+
+___
+5) Modify the following lines of code of 'diff-sequences-spark/differentiator/differentiator_rdd.py' file on the Master node. This step is needed to prevent a runtime error when the Spark cluster loses its Worker nodes and eventually fails to set the number of partitions: "ZeroDivisionError: integer division or modulo by zero":
+
+	(vim diff-sequences-spark/differentiator/differentiator_rdd.py)
+
+	(Line 199) first_rdd_number_of_partitions = int(number_of_available_map_cores / k_i) ===> first_rdd_number_of_partitions = ceil(number_of_available_map_cores / k_i)
+
+	(Line 215) second_rdd_number_of_partitions = int(number_of_available_map_cores / k_i) ===> second_rdd_number_of_partitions = ceil(number_of_available_map_cores / k_i)
+
+___
+6) In addition to the previous step, include the following line of code on 'diff-sequences-spark/differentiator/differentiator_rdd.py' file on the Master node:
+
+	(vim diff-sequences-spark/differentiator/differentiator_rdd.py)
+
+	(Line 0) from math import ceil
+
+7) Configure the following parameters of 'vm-revoker/config/vm_revoker.cfg' file on the local node:
+
+	(vim vm-revoker/config/vm_revoker.cfg)
+
+	instances_ids_list_file = {X1}
+	{X1} = Absolute path to the Worker VM instances IDs' list text file
+
+	Example:
+		i-05c5692901d6ee2f3
+		i-0a4d1ad8e9d414fb5
+		i-0bbd474d8bcfb2dd1
+
+	average_time_between_events_in_seconds = {X2}
+	{X2} = 3600 (when running the revocation scenario 𝑅𝑆_1), 1800 (when running the revocation scenario 𝑅𝑆_2), or 900 (when running the revocation scenario 𝑅𝑆_3)
+
+	stopping_criterion = "max_observation_length_in_seconds"
+
+	max_observation_length_in_seconds = 18000
+
+	(Please do not change the remaining parameters. They do not apply to the specific needs of these experiments.)
+
+___
+8) Submit the Diff Sequences Spark application to the Spark Cluster from the Master node:
+
+	$SPARK_HOME/bin/spark-submit --master spark://{MASTER_IP}:{MASTER_PORT} {APPLICATION_SUBMISSION_SETTINGS_FILE} {APPLICATION_ENTRY_POINT} {APPLICATION_ARGUMENTS}
+
+	where (Example): {MASTER_IP} = 10.0.2.1
+		         {MASTER_PORT} = 7077
+	                 {APPLICATION_SUBMISSION_SETTINGS_FILE} = diff-sequences-spark/config/spark_application_submission_settings.conf
+	                 {APPLICATION_ENTRY_POINT} = diff-sequences-spark/diff.py
+	                 {APPLICATION_ARGUMENTS} = diff-sequences-spark/config/differentiator.cfg
+
+9) Execute the VM Revoker on the local node right after submitting the Diff Sequences Spark application to the Spark Cluster:
+
+	python3 vm-revoker/revoke.py
+
+	Note: on the calculated arrival times, it will simulate the spot Worker instances revocation by terminating them.
+
+___
+10) Navigate through the logging files generated at the 'diff-sequences-spark/logging/' directory on the Master node to obtain the execution details, e.g., runtime.
+------------------------------------
+

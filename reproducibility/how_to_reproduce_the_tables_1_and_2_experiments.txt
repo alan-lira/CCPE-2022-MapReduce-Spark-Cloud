@@ -1,0 +1,88 @@
+------------------------------------
+HOW TO REPRODUCE THE 'TABLES 1 AND 2' EXPERIMENTS (Subsection 3.2: Application-Level Optimizations)
+
+___
+Assumptions: - You must be able to start Spark Standalone clusters with the target experimental scenarios configurations (refer to 'tutorials/how_to_setup_and_start_a_spark_standalone_cluster_using_ubuntu.txt' file);
+
+             - All nodes (Master and Workers) cloned the Diff Sequences Spark application (v0.9.9) repository (refer to 'tutorials/how_to_execute_the_diff_sequences_spark_application_on_a_spark_standalone_cluster_using_ubuntu.txt' file);
+
+             - All nodes' username is 'ubuntu';
+
+             - All nodes' CLI's starting path is '/home/ubuntu'; and
+
+             - The Master node cloned the SARS-CoV-2 input sequences directory (refer to 'tutorials/how_to_execute_the_diff_sequences_spark_application_on_a_spark_standalone_cluster_using_ubuntu.txt' file).
+
+___
+Tip: The input sequences files path sometimes may lead to runtime error due to the absolute path reference expected by the application. If that is your issue, try moving the input sequences directory into the 'diff-sequences-spark/' directory to make your life easier.
+
+___
+Remarks: - The mentioned experiments were executed on Amazon's Cloud (AWS EC2) with fixed input sequences size (𝑛 = 64) and different amounts and types of nodes (refer to paper's Subsection 3.2):
+
+	* 𝑛 = 64 SARS-CoV-2 input sequences;
+
+	* z1d.6xlarge VM instance type for the Master node; and
+
+	* z1d.large, z1d.xlarge, or z1d.2xlarge VM instances types for the Worker nodes.
+
+___
+1) Configure the following parameters of 'diff-sequences-spark/config/differentiator.cfg' file on the Master node:
+
+	(vim diff-sequences-spark/config/differentiator.cfg)
+
+	sequences_list_text_file = ../input_sequences/sars-cov-2_south_america_64_sequences_list.txt
+
+	allow_producer_consumer_threads = {X1}
+	allow_simultaneous_jobs_run = {X1}
+	{X1} = No (when using optimization scenario 𝑂𝑆_1) or Yes (when using optimization scenario 𝑂𝑆_2)
+
+	number_of_producers = {X2}
+	{X2} = 12 (when using optimization scenario 𝑂𝑆_2)
+
+	products_queue_max_size = {X3}
+	{X3} = 300 (when using optimization scenario 𝑂𝑆_2)
+
+	number_of_consumers = {X4}
+	{X4} = 12 (when using optimization scenario 𝑂𝑆_2)
+
+	fixed_k = {X5}
+	{X5} = Divisors of the total number of Executors cores in the cluster = 1, 2, 4, 8, 16, or 32 (when using optimization scenarios 𝑂𝑆_1 or 𝑂𝑆_2)
+
+	(Please do not change the remaining parameters. They do not apply to the specific needs of these experiments.)
+
+___
+2) Configure the following parameters of 'diff-sequences-spark/config/spark_application_submission_settings.conf' file on the Master node:
+
+	(vim diff-sequences-spark/config/spark_application_submission_settings.conf)
+
+	spark.scheduler.mode = {X1}
+	{X1} = FIFO (when using optimization scenario 𝑂𝑆_1) or FAIR (when using optimization scenario 𝑂𝑆_2)
+
+	spark.scheduler.allocation.file = config/spark_scheduler_allocation_settings.xml (when using optimization scenarios 𝑂𝑆_2)
+
+	spark.executor.cores = {X2}
+	{X2} = Number of vCPUs per Worker node = 2, 4, or 8 (when using optimization scenarios 𝑂𝑆_1 or 𝑂𝑆_2)
+
+	spark.executor.memory = {X3}G
+	{X3} = Memory size in Gibibytes (GiB) per Worker node = 16, 32, or 64 (when using optimization scenarios 𝑂𝑆_1 or 𝑂𝑆_2)
+
+	spark.driver.cores = 24 (when using optimization scenarios 𝑂𝑆_1 or 𝑂𝑆_2)
+
+	spark.driver.memory = 100G (when using optimization scenarios 𝑂𝑆_1 or 𝑂𝑆_2)
+
+	(Please do not change the remaining parameters. They do not apply to the specific needs of these experiments.)
+
+___
+3) Submit the Diff Sequences Spark application to the Spark Cluster from the Master node:
+
+	$SPARK_HOME/bin/spark-submit --master spark://{MASTER_IP}:{MASTER_PORT} {APPLICATION_SUBMISSION_SETTINGS_FILE} {APPLICATION_ENTRY_POINT} {APPLICATION_ARGUMENTS}
+
+	where (Example): {MASTER_IP} = 10.0.2.1
+		         {MASTER_PORT} = 7077
+	                 {APPLICATION_SUBMISSION_SETTINGS_FILE} = diff-sequences-spark/config/spark_application_submission_settings.conf
+	                 {APPLICATION_ENTRY_POINT} = diff-sequences-spark/diff.py
+	                 {APPLICATION_ARGUMENTS} = diff-sequences-spark/config/differentiator.cfg
+
+___
+4) Navigate through the logging files generated at the 'diff-sequences-spark/logging/' directory on the Master node to obtain the execution details, e.g., runtime.
+------------------------------------
+
