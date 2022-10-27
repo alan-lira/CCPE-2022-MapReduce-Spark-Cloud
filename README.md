@@ -5,6 +5,8 @@ This repository supplies the data and other artifacts supporting the results obt
 
 ## Contents
 
+- The _datasets_ folder provides the _Diff Sequences Spark_ application measurements datasets (training and testing) employed in our runtime prediction model;
+
 - The _input_sequences_ folder provides all the SARS-CoV-2 sequences and their respective sequences lists used as input for the _Diff Sequences Spark_ application;
 
 - The _reproducibility_ folder provides step-by-step guides to reproduce all the referred paper's experiments;
@@ -12,3 +14,4 @@ This repository supplies the data and other artifacts supporting the results obt
 - The _spreadsheets_ folder provides, in detail, all the experimental configurations and results obtained in the referred paper; and
 
 - The _tutorials_ folder provides step-by-step guides to set up and start a Spark Standalone cluster using Ubuntu (Linux) operating system and to execute the _Diff Sequences Spark_ application on a running Spark Standalone cluster.
+
