@@ -18,13 +18,13 @@ ___
 ___
 2) Clone the SARS-CoV-2 input sequences directory into the Master node:
 
-	(considering git --version == 2.38.1)
+	(if git version >= 2.19.0)
 
-	mkdir ./temp; git clone --depth 1 --filter=blob:none --sparse https://github.com/alan-lira/ccpe-2022-mapreduce-spark-cloud ./temp; cd ./temp; git sparse-checkout set input_sequences; mv input_sequences ../input_sequences; cd ../; rm -rf ./temp
+	mkdir ./temp; git clone --depth 1 --filter=blob:none --sparse https://github.com/alan-lira/ccpe-2022-mapreduce-spark-cloud ./temp; cd ./temp; git sparse-checkout set input_sequences; mv ./input_sequences ../input_sequences; cd ../; rm -rf ./temp
 
-	(or simply clone the entire repository into the Master node)
+	(otherwise simply clone the entire repository)
 
-	git clone https://github.com/alan-lira/ccpe-2022-mapreduce-spark-cloud; mv ./ccpe-2022-mapreduce-spark-cloud/input_sequences ./input_sequences; rm -rf ccpe-2022-mapreduce-spark-cloud
+	git clone https://github.com/alan-lira/ccpe-2022-mapreduce-spark-cloud; mv ./ccpe-2022-mapreduce-spark-cloud/input_sequences ./input_sequences; rm -rf ./ccpe-2022-mapreduce-spark-cloud
 
 ___
 3) Configure the Diff Sequences Spark application parameters, i.e., input settings, output settings, general settings, producer-consumer threads settings, and partitioning settings, on the Master node (may vary from experiment to experiment):

@@ -10,10 +10,20 @@ Assumptions: - You must be able to start Spark Standalone clusters with the targ
 
              - All nodes' CLI's starting path is '/home/ubuntu';
 
-             - The Master node cloned the SARS-CoV-2 input sequences directory (refer to 'tutorials/how_to_execute_the_diff_sequences_spark_application_on_a_spark_standalone_cluster_using_ubuntu.txt' file); and
+             - The Master node cloned the SARS-CoV-2 input sequences directory (refer to 'tutorials/how_to_execute_the_diff_sequences_spark_application_on_a_spark_standalone_cluster_using_ubuntu.txt' file);
 
-             - The Master or local node cloned the CRESPark (v0.2.2) repository:
+             - The local node cloned the CRESPark (v0.2.2) repository:
 		git clone https://github.com/alan-lira/crespark -b v0.2.2
+
+             - The local node cloned the runtime prediction model datasets directory:
+
+		(if git version >= 2.19.0)
+
+		mkdir ./temp; git clone --depth 1 --filter=blob:none --sparse https://github.com/alan-lira/ccpe-2022-mapreduce-spark-cloud ./temp; cd ./temp; git sparse-checkout set datasets; mv ./datasets ../datasets; cd ../; rm -rf ./temp
+
+		(otherwise simply clone the entire repository)
+
+		git clone https://github.com/alan-lira/ccpe-2022-mapreduce-spark-cloud; mv ./ccpe-2022-mapreduce-spark-cloud/datasets ./datasets; rm -rf ./ccpe-2022-mapreduce-spark-cloud
 
 ___
 Tip: The input sequences files path sometimes may lead to runtime error due to the absolute path reference expected by the application. If that is your issue, try moving the input sequences directory into the 'diff-sequences-spark/' directory to make your life easier.
@@ -83,7 +93,7 @@ ___
 4) Navigate through the logging files generated at the 'diff-sequences-spark/logging/' directory on the Master node to obtain the execution details, e.g., runtime.
 
 ___
-5) After collecting the experimental features (omega_w, iota_w, gamma_w, M, R, and runtime_in_seconds), arrange the training and testing datasets in two separate files regarding the following structure per experiment on the Master or local node:
+5) After collecting the experimental features (omega_w, iota_w, gamma_w, M, R, and runtime_in_seconds), arrange the training and testing datasets in two separate files regarding the following structure per experiment on the local node:
 
 	[Experiment Index {X1}]
 	{X1} = Index number of the experiment
@@ -111,20 +121,20 @@ ___
 	.
 
 ___
-6) Configure the following parameters of 'crespark/config/beta_coefficients_learner.cfg' file on the Master or local node:
+6) Configure the following parameters of 'crespark/config/beta_coefficients_learner.cfg' file on the local node:
 
 	(vim crespark/config/beta_coefficients_learner.cfg)
 
 	training_dataset_input_file = {X1}
-	{X1} = Absolute path to your training dataset text file
+	{X1} = Absolute path to your training dataset text file or datasets/training_dataset.txt (when using our experimental results data)
 
 	testing_dataset_input_file = {X2}
-	{X2} = Absolute path to your testing dataset text file
+	{X2} = Absolute path to your testing dataset text file or datasets/testing_dataset.txt (when using our experimental results data)
 
 ___
-7) Execute CRESPark on the Master or local node to train our proposed model and obtain the beta coefficient values and the model evaluation metrics (MAE, MAPE, RMSE, and R-Squared) results:
+7) Execute CRESPark on the local node to train our proposed model and obtain the beta coefficient values and the model evaluation metrics (MAE, MAPE, RMSE, and R-Squared) results:
 
-	python3 crespark/optimize.py
+	python3 crespark/optimize.py crespark/config/beta_coefficients_learner.cfg crespark/config/crespark_optimizer.cfg
 
 ------------------------------------
 

@@ -42,7 +42,7 @@ Remarks: - The mentioned experiments were executed on Amazon's Cloud (AWS EC2) w
 ___
 1) To reproduce (obtain) the optimal parameters selection, i.e., Ec_opt and iota_w, execute CRESPark on the local node (the beta parameters must be known at this point, otherwise refer to 'reproducibility/how_to_reproduce_the_runtime_cost_model_training_and_testing_experiments.txt' file):
 
-	python3 crespark/optimize.py
+	python3 crespark/optimize.py crespark/config/beta_coefficients_learner.cfg crespark/config/crespark_optimizer.cfg
 
 	Note: configure the 'Input Parameters', 'Decision Variables Bounds', and 'General Settings' settings of 'crespark/config/crespark_optimizer.cfg' file on the local node according to the target experimental scenario:
 
