@@ -6,8 +6,13 @@ Assumptions: - You must be able to start Spark Standalone clusters with the outp
 
 	     - The CRESPark (v0.2.2) repository is cloned and trained on the local node (refer to 'reproducibility/how_to_reproduce_the_runtime_cost_model_training_and_testing_experiments.txt' file);
 
-	     - The VM Revoker (v0.1.0) repository is cloned on the local node:
-			git clone https://github.com/alan-lira/vm-revoker -b v0.1.0
+	     - The VM Revoker (v0.1.1) repository is cloned on the local node:
+			git clone https://github.com/alan-lira/vm-revoker -b v0.1.1
+
+	     - The VM Revoker (v0.1.1) dependencies (boto3) are installed on the local node:
+			pip install -r vm-revoker/requirements.txt
+
+	     - The AWS Command Line Interface (AWS CLI) is installed and configured on the local node (refer to 'tutorials/how_to_install_and_configure_aws_cli_using_ubuntu.txt');
 
              - All nodes (Master and Workers) cloned the Diff Sequences Spark application (v0.9.9) repository (refer to 'tutorials/how_to_execute_the_diff_sequences_spark_application_on_a_spark_standalone_cluster_using_ubuntu.txt' file);
 
@@ -109,20 +114,16 @@ ___
 
 	(vim vm-revoker/config/vm_revoker.cfg)
 
-	instances_ids_list_file = {X1}
-	{X1} = Absolute path to the Worker VM instances IDs' list text file
+	vm_instances_ids_list_file = {X1}
+	{X1} = Absolute path to the spot Worker VM instances ids' list text file
 
-	Example:
+	Example of AWS instances ids:
 		i-05c5692901d6ee2f3
 		i-0a4d1ad8e9d414fb5
 		i-0bbd474d8bcfb2dd1
 
 	average_time_between_events_in_seconds = {X2}
 	{X2} = 3600 (when running the revocation scenario 𝑅𝑆_1), 1800 (when running the revocation scenario 𝑅𝑆_2), or 900 (when running the revocation scenario 𝑅𝑆_3)
-
-	stopping_criterion = "max_observation_length_in_seconds"
-
-	max_observation_length_in_seconds = 18000
 
 	(Please do not change the remaining parameters. They do not apply to the specific needs of these experiments.)
 
@@ -139,9 +140,9 @@ ___
 
 9) Execute the VM Revoker on the local node right after submitting the Diff Sequences Spark application to the Spark Cluster:
 
-	python3 vm-revoker/revoke.py
+	python3 vm-revoker/revoke.py vm-revoker/config/vm_revoker.cfg
 
-	Note: on the calculated arrival times, it will simulate the spot Worker instances revocation by terminating them.
+	Note: on the calculated arrival times, the VM Revoker will simulate the spot Worker instances revocation by terminating them.
 
 ___
 10) Navigate through the logging files generated at the 'diff-sequences-spark/logging/' directory on the Master node to obtain the execution details, e.g., runtime.

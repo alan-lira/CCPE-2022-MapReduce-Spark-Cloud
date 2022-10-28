@@ -13,5 +13,5 @@ This repository supplies the data and other artifacts supporting the results obt
 
 - The _spreadsheets_ folder provides, in detail, all the experimental configurations and results obtained in the referred paper; and
 
-- The _tutorials_ folder provides step-by-step guides to set up and start a Spark Standalone cluster using Ubuntu (Linux) operating system and to execute the _Diff Sequences Spark_ application on a running Spark Standalone cluster.
+- The _tutorials_ folder provides step-by-step guides to set up and start a Spark Standalone cluster using Ubuntu (Linux) operating system, install and configure AWS CLI, and execute the _Diff Sequences Spark_ application on a running Spark Standalone cluster.
 

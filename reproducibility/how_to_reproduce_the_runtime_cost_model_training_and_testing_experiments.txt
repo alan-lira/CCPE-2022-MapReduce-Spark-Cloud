@@ -15,6 +15,9 @@ Assumptions: - You must be able to start Spark Standalone clusters with the targ
              - The local node cloned the CRESPark (v0.2.2) repository:
 		git clone https://github.com/alan-lira/crespark -b v0.2.2
 
+	     - The local node installed the CRESPark (v0.2.2) dependencies (gurobipy, numpy, scikit-learn, and scipy):
+			pip install -r  crespark/requirements.txt
+
              - The local node cloned the runtime prediction model datasets directory:
 
 		(if git version >= 2.19.0)

@@ -1,0 +1,30 @@
+------------------------------------
+HOW TO INSTALL AND CONFIGURE AWS CLI USING UBUNTU
+
+___
+Assumptions: - The local node CLI's current path is '/home/ubuntu'; and
+
+	     - The Python's packages installer (pip) is installed on the local node:
+			sudo apt-get install python3-pip -y
+
+___
+1) Install the AWS Command Line Interface (AWS CLI) on the local node:
+	pip3 install awscli
+
+___
+2) Configure the AWS CLI on the local node:
+	aws configure
+
+	AWS Access Key ID [None]: {X1}
+	AWS Secret Access Key [None]: {X2}
+	Default region name [None]: {X3}
+	Default output format [None]: {X4}
+
+	Example: {X1} = AKIAIOSFODNN7EXAMPLE
+                 {X2} = wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+                 {X3} = us-east-1
+                 {X4} = json
+
+	Note: refer to https://docs.aws.amazon.com/powershell/latest/userguide/pstools-appendix-sign-up.html
+------------------------------------
+
